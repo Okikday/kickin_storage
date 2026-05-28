@@ -1,0 +1,16 @@
+name: kickin_storage_example
+description: Example app for the kickin_storage package.
+publish_to: none
+
+environment:
+  sdk: ^3.11.5
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  kickin_storage:
+    path: ..
+
+flutter:
+  uses-material-design: true
