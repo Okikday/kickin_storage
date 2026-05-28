@@ -4,23 +4,6 @@ Kickin is a modern modular toolkit designed to turbocharge your Flutter developm
 
 This is the abstracted storage package.
 
-## Installation
-
-Current version: `0.0.1-dev.1`
-
-Add it with:
-
-```bash
-flutter pub add kickin_storage
-```
-
-Or pin the dependency manually in `pubspec.yaml`:
-
-```yaml
-dependencies:
-  kickin_storage: ^0.0.1-dev.1
-```
-
 ### 💾 Storage
 A unified abstraction for local persistent storage, architected to support multiple drivers smoothly.
 
@@ -48,3 +31,12 @@ A unified abstraction for local persistent storage, architected to support multi
 Uses `hive_ce_flutter` and `flutter_secure_storage`.
 
 Other storage kinds are on the way.
+
+## 📦 Installation
+
+Add the package to your app dependencies:
+
+```yaml
+dependencies:
+  kickin_storage: 0.0.1-dev.2
+```

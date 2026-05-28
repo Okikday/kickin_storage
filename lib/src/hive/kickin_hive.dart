@@ -1,6 +1,5 @@
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
-import 'default_hive_box_names.dart';
 import 'src/app_hive.dart';
 import 'src/lazy_hive.dart';
 import 'src/secure_hive.dart';
@@ -37,5 +36,3 @@ class KHive<T> {
     if (initLazy && !lazy.isInitialized) await lazy.initialize();
   }
 }
-
-final kickinCacheHive = AppHive(boxName: kKickinCache);
