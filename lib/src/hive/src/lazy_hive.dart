@@ -8,16 +8,20 @@ import '../default_hive_box_names.dart';
 /// Provides convenience methods for `initialize`, `setData`, `getData`, and
 /// watching changes by key.
 class KLazyHive<T> {
+  /// The name of the Lazy Hive box to open and use.
   final String boxName;
 
   LazyBox<T>? _box;
 
   bool get isInitialized => _box != null;
 
+  /// Creates a new instance of [KLazyHive] with the given [boxName].
   KLazyHive({this.boxName = kAppBoxName});
 
+  /// Initializes the Lazy Hive box by opening it.
   Future<void> initialize() async => _box = await Hive.openLazyBox(boxName);
 
+  /// Stores a [value] associated with the given [key] in the lazy box.
   Future<void> setData({required String key, required T value}) async {
     if (_box == null || !_box!.isOpen) {
       dev.log("Lazy Hive box was not initialized!");
@@ -26,6 +30,8 @@ class KLazyHive<T> {
     return _box?.put(key, value);
   }
 
+  /// Retrieves the value associated with the given [key] from the lazy box.
+  /// Returns null if the key doesn't exist or if the box is not initialized.
   Future<T?> getData({required String key}) async {
     if (_box == null || !_box!.isOpen) {
       dev.log("Lazy Hive box was not initialized!");
@@ -34,6 +40,7 @@ class KLazyHive<T> {
     return _box?.get(key);
   }
 
+  /// Deletes the value associated with the given [key] from the lazy box.
   Future<void> deleteData({required String key}) async {
     if (_box == null || !_box!.isOpen) {
       dev.log("Lazy Hive box was not initialized!");
@@ -42,6 +49,7 @@ class KLazyHive<T> {
     return _box?.delete(key);
   }
 
+  /// Watches for changes to the value associated with the given [key].
   Stream<void> watchChanges({required String key}) async* {
     if (_box == null || !_box!.isOpen) {
       dev.log("Lazy Hive box was not initialized!");
@@ -50,6 +58,7 @@ class KLazyHive<T> {
     yield* _box!.watch(key: key);
   }
 
+  /// Watches for changes to the value associated with the given [key] and yields the new value.
   Stream<T?> watchData({required String key}) async* {
     if (_box == null || !_box!.isOpen) {
       dev.log("Lazy Hive box was not initialized!");
@@ -59,6 +68,7 @@ class KLazyHive<T> {
     yield* _box!.watch(key: key).asyncMap((e) => e.value);
   }
 
+  /// Clears all data from the lazy box.
   Future<bool> resetAll() {
     if (_box == null || !_box!.isOpen) {
       dev.log("Lazy Hive box was not initialized!");

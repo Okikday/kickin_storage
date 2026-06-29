@@ -1,3 +1,6 @@
+/// A Kickin package providing simple helpers around Hive for app and secure storage.
+library;
+
 export 'src/hive/kickin_hive.dart' show KHive;
 export 'src/hive/src/app_hive.dart' show AppHive;
 export 'src/hive/src/lazy_hive.dart' show KLazyHive;
