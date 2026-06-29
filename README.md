@@ -148,7 +148,7 @@ Or add manually to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  kickin_storage: 0.0.1-dev.3
+  kickin_storage: 0.0.1
 ```
 
 **Dependencies:** [`hive_ce_flutter`](https://pub.dev/packages/hive_ce_flutter) · [`flutter_secure_storage`](https://pub.dev/packages/flutter_secure_storage)
