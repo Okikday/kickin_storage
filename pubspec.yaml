@@ -1,6 +1,6 @@
 name: kickin_storage
 description: "Kickin Storage provides useful storage utilities for easy kicking with your flutter project."
-version: 0.0.1+1
+version: 0.0.2
 homepage: https://github.com/okikday/kickin_storage
 repository: https://github.com/okikday/kickin_storage
 

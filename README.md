@@ -16,7 +16,7 @@ Or add it manually to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  kickin_storage: ^0.0.1+1
+  kickin_storage: ^0.0.2
 ```
 
 ---
