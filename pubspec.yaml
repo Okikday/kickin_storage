@@ -1,6 +1,6 @@
 name: kickin_storage
 description: "Kickin Storage provides useful storage utilities for easy kicking with your flutter project."
-version: 0.0.1
+version: 0.0.1+1
 homepage: https://github.com/okikday/kickin_storage
 repository: https://github.com/okikday/kickin_storage
 
@@ -11,7 +11,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_secure_storage: ^10.3.1
   hive_ce_flutter: ^2.3.4
 
 dev_dependencies:

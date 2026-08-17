@@ -15,7 +15,10 @@ class KickinStorageExampleApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Kickin Storage Example',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F4C81)), useMaterial3: true),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F4C81)),
+        useMaterial3: true,
+      ),
       home: const StorageDemoPage(),
     );
   }
@@ -32,7 +35,6 @@ class _StorageDemoPageState extends State<StorageDemoPage> {
   String _status = 'Ready';
   String _themeValue = 'unset';
   String _cachedItemsValue = 'unset';
-  String _secureTokenValue = 'unset';
 
   Future<void> _saveTheme() async {
     await KHive.on.app.setData(key: 'theme', value: 'dark');
@@ -54,17 +56,6 @@ class _StorageDemoPageState extends State<StorageDemoPage> {
     });
   }
 
-  Future<void> _saveSecureToken() async {
-    await KHive.on.initialize(initSecure: true);
-    await KHive.on.secure.setData(key: 'token', value: 'secret-token');
-    final token = KHive.on.secure.getData(key: 'token');
-
-    setState(() {
-      _secureTokenValue = token ?? 'missing';
-      _status = 'Saved secure data';
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,23 +63,29 @@ class _StorageDemoPageState extends State<StorageDemoPage> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text('Status: $_status', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Status: $_status',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 24),
           Wrap(
             spacing: 12,
             runSpacing: 12,
             children: [
-              FilledButton(onPressed: _saveTheme, child: const Text('Save app value')),
-              FilledButton.tonal(onPressed: _saveCachedItems, child: const Text('Save lazy value')),
-              OutlinedButton(onPressed: _saveSecureToken, child: const Text('Save secure value')),
+              FilledButton(
+                onPressed: _saveTheme,
+                child: const Text('Save app value'),
+              ),
+              FilledButton.tonal(
+                onPressed: _saveCachedItems,
+                child: const Text('Save lazy value'),
+              ),
             ],
           ),
           const SizedBox(height: 32),
           _ValueCard(title: 'App box value', value: _themeValue),
           const SizedBox(height: 12),
           _ValueCard(title: 'Lazy box value', value: _cachedItemsValue),
-          const SizedBox(height: 12),
-          _ValueCard(title: 'Secure box value', value: _secureTokenValue),
         ],
       ),
     );

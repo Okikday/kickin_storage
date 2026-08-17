@@ -1,154 +1,196 @@
-# kickin_storage `#experimental`
+# kickin_storage
 
-Kickin is a modern modular toolkit designed to turbocharge your Flutter development and eliminate boilerplate. It provides curated utilities, elegant extensions, and standardized architectures for common tasks like networking, state management, and storage.
+A Flutter package for simple, reliable local storage. It wraps [Hive](https://pub.dev/packages/hive_ce_flutter) with three ready-to-use box types: general, encrypted, and lazy-loaded.
 
-This is the **#storage** part of it.
-
----
-
-## ✨ What's in the box
-
-| Class | Description |
-|---|---|
-| `KHive` | Singleton entry point — initialises and owns all three box types |
-| `AppHive<T>` | General-purpose synchronous key-value box |
-| `KLazyHive<T>` | Lazy-loaded box for large or infrequently accessed data |
-| `KSecureHive<T>` | AES-encrypted box backed by `flutter_secure_storage` |
+Part of the **Kickin** toolkit for Flutter.
 
 ---
 
-## 💾 Storage
+## Installation
 
-A unified abstraction for local persistent storage, designed to support multiple drivers. **Hive is the first driver — more are on the way.**
-
-### Hive
-
-Powered by [`hive_ce_flutter`](https://pub.dev/packages/hive_ce_flutter). Three box flavours let you match storage strategy to data sensitivity and size.
-
-#### `AppHive` — general purpose
-
-Synchronous reads, async writes. Best for app preferences, UI state, and cached API responses that don't need encryption.
-
-```dart
-await KHive.on.app.setData(key: 'theme', value: 'dark');
-final theme = KHive.on.app.getData(key: 'theme'); // sync
+```sh
+flutter pub add kickin_storage
 ```
 
-Supports reactive access via two stream variants:
+Or add it manually to your `pubspec.yaml`:
 
-- `watchChanges(key:)` — emits a raw `BoxEvent` on every write to that key.
-- `watchData(key:)` — emits the current value immediately, then re-emits the new value on every subsequent write. Typed as `Stream<T?>`.
-
-```dart
-KHive.on.app.watchData(key: 'theme').listen((theme) {
-  print('theme changed to $theme');
-});
+```yaml
+dependencies:
+  kickin_storage: ^0.0.1+1
 ```
-
-#### `KLazyHive` — large or infrequently accessed data
-
-Values are loaded from disk only when explicitly requested (`getData` is async). Use for cached API payloads, media metadata, or anything where you don't want the whole box in memory.
-
-```dart
-await KHive.on.lazy.setData(key: 'cached_items', value: ['a', 'b']);
-final items = await KHive.on.lazy.getData(key: 'cached_items'); // async
-```
-
-Shares the same `watchChanges` and `watchData` API as `AppHive`, with `watchData` awaiting the lazy read before emitting.
-
-#### `KSecureHive` — sensitive data
-
-Generates a cryptographically random 32-byte AES key on first use, stores it in `flutter_secure_storage`, and uses it to open an encrypted Hive box. Subsequent opens retrieve the same key so data survives restarts.
-
-```dart
-await KHive.on.secure.setData(key: 'token', value: 'secret-token');
-final token = KHive.on.secure.getData(key: 'token'); // sync after init
-```
-
-`resetAll()` on `KSecureHive` deletes both the box contents **and** the encryption key from secure storage — data is unrecoverable after this call.
-
-> **Note:** `AppHive.resetAll` requires an `acknowledge` string parameter as a safeguard against accidental calls. `KSecureHive.resetAll` and `KLazyHive.resetAll` have no such parameter — treat them accordingly.
 
 ---
 
-### Initialisation
+## How it works
 
-Call `KHive.on.initialize()` early in `main`, opting in only to the boxes you need. Already-open boxes are skipped safely.
+Everything goes through a single singleton: `KHive.on`. It owns three box types, each suited to a different use case:
+
+| Box | Access | Use for |
+|---|---|---|
+| `KHive.on.app` (`AppHive`) | Sync reads, async writes | Preferences, UI state, cached responses |
+| `KHive.on.lazy` (`KLazyHive`) | Async reads and writes | Large data you don't want fully in memory |
+
+---
+
+## Quick start
+
+### Step 1 — Initialize in `main`
+
+Call `KHive.on.initialize()` before `runApp`, opting in to only the boxes you need:
 
 ```dart
+import 'package:kickin_storage/kickin_storage.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await KHive.on.initialize(
-    initApp: true,
-    initSecure: true,
-    initLazy: true,
+    initApp: true,     // general storage
+    initLazy: true,    // lazy-loaded storage
   );
 
   runApp(const MyApp());
 }
 ```
 
-Individual boxes can also be initialised on demand — `KHive` guards against double-init:
+### Step 2 — Read and write
 
 ```dart
-if (!KHive.on.app.isInitialized) await KHive.on.app.initialize();
+// General storage
+await KHive.on.app.setData(key: 'theme', value: 'dark');
+final theme = KHive.on.app.getData(key: 'theme'); // sync
+
+// Lazy storage (large data)
+await KHive.on.lazy.setData(key: 'feed', value: ['item1', 'item2']);
+final feed = await KHive.on.lazy.getData(key: 'feed'); // async
+```
+
+That's it. No setup beyond initialization.
+
+---
+
+## Box types in detail
+
+### `AppHive` — general purpose
+
+Best for app settings, UI state, and cached data that doesn't need encryption.
+
+- Reads are **synchronous** (the whole box is in memory).
+- Writes are **asynchronous**.
+
+```dart
+await KHive.on.app.setData(key: 'onboarded', value: true);
+final onboarded = KHive.on.app.getData(key: 'onboarded'); // bool?
+await KHive.on.app.deleteData(key: 'onboarded');
+```
+
+> `resetAll` requires an `acknowledge` string to prevent accidental data loss.
+
+---
+
+### `KLazyHive` — lazy-loaded storage
+
+Values are only loaded from disk when you explicitly request them. Use this for large datasets like cached API payloads or media metadata where loading everything into memory upfront is wasteful.
+
+- Reads are **asynchronous** (fetched from disk on demand).
+- Writes are **asynchronous**.
+
+```dart
+await KHive.on.lazy.setData(key: 'articles', value: articleList);
+final articles = await KHive.on.lazy.getData(key: 'articles');
 ```
 
 ---
 
-### Usage
+## Reactive updates (watching changes)
+
+Both `AppHive` and `KLazyHive` support listening to key changes in real time:
 
 ```dart
-import 'package:kickin_storage/kickin_storage.dart';
+// Emits the current value immediately, then re-emits on every change
+KHive.on.app.watchData(key: 'theme').listen((theme) {
+  print('Theme changed to: $theme');
+});
 
-enum StorageKey { theme, token, cachedFeed }
+// Emits a raw BoxEvent on every write (no initial value)
+KHive.on.app.watchChanges(key: 'theme').listen((_) {
+  print('theme key was written');
+});
+```
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+`KLazyHive.watchData` works the same way, but awaits the async read before emitting the initial value.
 
-  await KHive.on.initialize(initApp: true, initSecure: true, initLazy: true);
+---
 
-  // General
-  await KHive.on.app.setData(key: StorageKey.theme.name, value: 'dark');
-  final theme = KHive.on.app.getData(key: StorageKey.theme.name);
+## Initializing boxes on demand
 
-  // Secure
-  await KHive.on.secure.setData(key: StorageKey.token.name, value: 'secret-token');
-  final token = KHive.on.secure.getData(key: StorageKey.token.name);
+You don't have to initialize all boxes upfront. You can initialize them individually when needed. `KHive` guards against double-initialization:
 
-  // Lazy
-  await KHive.on.lazy.setData(key: StorageKey.cachedFeed.name, value: ['a', 'b']);
-  final feed = await KHive.on.lazy.getData(key: StorageKey.cachedFeed.name);
-
-  // Reactive
-  KHive.on.app.watchData(key: StorageKey.theme.name).listen((v) => print(v));
+```dart
+if (!KHive.on.app.isInitialized) {
+  await KHive.on.app.initialize();
 }
 ```
 
 ---
 
-## 🔮 Roadmap
+## Full example
 
-Hive is the first storage driver. Planned additions include:
+```dart
+import 'package:kickin_storage/kickin_storage.dart';
 
-- `SharedPreferences` driver for simple primitive storage
-- `SQLite` driver via `drift` for relational data
-- Unified `KStorage` abstraction across all drivers
+// Use an enum to avoid raw key strings across your codebase
+enum StorageKey { theme, authToken, cachedFeed }
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await KHive.on.initialize(
+    initApp: true,
+    initLazy: true,
+  );
+
+  // General
+  await KHive.on.app.setData(key: StorageKey.theme.name, value: 'dark');
+  final theme = KHive.on.app.getData(key: StorageKey.theme.name);
+  print('Theme: $theme');
+
+  // Lazy
+  await KHive.on.lazy.setData(key: StorageKey.cachedFeed.name, value: ['a', 'b', 'c']);
+  final feed = await KHive.on.lazy.getData(key: StorageKey.cachedFeed.name);
+  print('Feed: $feed');
+
+  // Reactive
+  KHive.on.app.watchData(key: StorageKey.theme.name).listen((v) {
+    print('Theme updated: $v');
+  });
+
+  runApp(const MyApp());
+}
+```
 
 ---
 
-## 📦 Installation
+## API reference summary
 
-```sh
-flutter pub add kickin_storage
-```
+| Class | Purpose |
+|---|---|
+| `KHive` | Singleton entry point that initializes and owns all box types |
+| `AppHive` | General-purpose synchronous key-value box |
+| `KLazyHive` | Lazy-loaded box for large or infrequently accessed data |
 
-Or add manually to `pubspec.yaml`:
+**Shared methods** (available on all box types):
 
-```yaml
-dependencies:
-  kickin_storage: 0.0.1
-```
+| Method | Description |
+|---|---|
+| `initialize()` | Opens the box. Must be called before use |
+| `setData(key:, value:)` | Stores a value |
+| `getData(key:)` | Retrieves a value (sync on `AppHive`, async on `KLazyHive`) |
+| `deleteData(key:)` | Removes a key |
+| `resetAll(...)` | Clears all data from the box |
+| `watchData(key:)` | Stream of values for a key (current + future changes) |
+| `watchChanges(key:)` | Stream of raw box events for a key |
 
-**Dependencies:** [`hive_ce_flutter`](https://pub.dev/packages/hive_ce_flutter) · [`flutter_secure_storage`](https://pub.dev/packages/flutter_secure_storage)
+---
+
+> Additional storage drivers (SharedPreferences, SQLite via Drift) are planned for future releases.
